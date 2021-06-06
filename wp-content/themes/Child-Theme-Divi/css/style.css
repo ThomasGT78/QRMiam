@@ -1,0 +1,23 @@
+/*
+ Theme Name: Child-Divi
+ Template: Divi
+ Description: Theme enfant de Divi
+ Version: 0.1.0
+*/
+
+/* @import url('../Divi/style.css'); */
+
+.text-center {
+    text-align: center;
+}
+
+@media (max-width: 980px) {
+.et_pb_shop ul.products.columns-1 li.product, .et_pb_shop ul.products.columns-2 li.product, .et_pb_shop ul.products.columns-3 li.product, .et_pb_shop ul.products.columns-4 li.product, 
+.et_pb_shop ul.products.columns-5 li.product, .et_pb_shop ul.products.columns-6 li.product, .et_pb_wc_related_products ul.products.columns-1 li.product, .et_pb_wc_related_products ul.products.columns-2 li.product, 
+.et_pb_wc_related_products ul.products.columns-3 li.product, .et_pb_wc_related_products ul.products.columns-4 li.product, .et_pb_wc_related_products ul.products.columns-5 li.product, .et_pb_wc_related_products 
+ul.products.columns-6 li.product, .et_pb_wc_upsells ul.products.columns-1 li.product, .et_pb_wc_upsells ul.products.columns-2 li.product, .et_pb_wc_upsells ul.products.columns-3 li.product, 
+.et_pb_wc_upsells ul.products.columns-4 li.product, .et_pb_wc_upsells ul.products.columns-5 li.product, .et_pb_wc_upsells ul.products.columns-6 li.product {
+
+    width: 100%!important;
+	}
+}
