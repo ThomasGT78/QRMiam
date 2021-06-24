@@ -52,10 +52,10 @@ function iMainQuery($SQL, &$rs) {
  **************************************************************************************************/
 
 /**
- * Requête générale sur la BD et transformation du résultat au format json
+ * Requête générale sur la BD et conversion du résultat json en objet PHP
  *
  * @param [type] $sql
- * @return json type
+ * @return array type
  */ 
 function iWhileFetch($sql) {
 	global $wpdb;
@@ -255,15 +255,13 @@ function iUpdateArrayInt($table, $postData = array(), $conditions = array(), $ht
  *								FUNCTION iUpdateArrayMultiConds()								  *
  **************************************************************************************************/
 
-function iUpdateArrayMultiConds($table, $postData = array(), $conditions = array(), $html_spl='No') {
+function iUpdateArrayMultiConds($table, $postData = array(), $conditions = array()) {
 	global $wpdb;
 	$valuesToSet = '';
 
 	// VALUES TO SET
-	foreach($postData as $key=>$value) {				
-		if($html_spl == 'Yes') {
-			$value = htmlspecialchars($value);
-		}
+	foreach($postData as $key=>$value) {
+		$value = htmlspecialchars($value);
 
 		if($value == NULL && $value !== 0){
 			$valuesToSet .= "`$key` = NULL, ";
@@ -276,7 +274,7 @@ function iUpdateArrayMultiConds($table, $postData = array(), $conditions = array
 		}
 	}
 
-	// Pour enlever la , et l'espace à la fin de "`$k` = NULL, "
+	// Pour enlever la «, » à la fin de «`$k` = NULL, »
 	$valuesToSet = substr($valuesToSet, 0, strlen($valuesToSet) - 2);
 
 	// CONDITIONS
@@ -296,13 +294,13 @@ function iUpdateArrayMultiConds($table, $postData = array(), $conditions = array
 		foreach($conditions as $k => $v) {
 			$v = htmlspecialchars($v);
 			if ($i == 0) {
-				if (is_numeric($v) || strtotime($v)){
+				if (is_numeric($v)){
 					$conds .= "`$k` = $v";
 				} elseif (is_string($v)){
 					$conds .= "`$k` = '$v'";
 				}
 			} else {
-				if (is_numeric($v) || strtotime($v)){
+				if (is_numeric($v)){
 					$conds .= " AND `$k` = $v";
 				} elseif (is_string($v)) {
 					$conds .= " AND `$k` = '$v'";
@@ -315,6 +313,7 @@ function iUpdateArrayMultiConds($table, $postData = array(), $conditions = array
 	// Requête SQL
 	$update = "UPDATE `$table` SET $valuesToSet WHERE $conds";
 	$rs = $wpdb->query($update);
+	
 
 	if($wpdb->last_error) {
 		$error=$wpdb->last_error;

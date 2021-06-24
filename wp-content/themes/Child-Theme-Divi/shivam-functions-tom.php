@@ -312,8 +312,8 @@ function get_stat_nbre_vue_By_user_id_now($user_id){
 	global $wpdb;
 	date_default_timezone_set('Europe/Paris');
 	$stat_nbre_vue = $wpdb->prefix . 'stat_nbre_vue';
-	$date=date("Y-m-d");
-	$heure=date("H");
+	$date = date("Y-m-d");
+	$heure = date("H");
 
 	$stat_nbre_vue_sql = "select * from `".$stat_nbre_vue."` WHERE `user_id`=\"$user_id\" AND `date`=\"$date\" AND `heure`=\"$heure\"";
 	
@@ -1280,9 +1280,9 @@ function cn_public_page($site_url){ // Fin ligne 1484
 		if($stat_nbre_vue){
 
 			//Si il existe déja un champ pour le jour
-			if($stat_nbre_vue[0]['date']==date("Y-m-d")) {
+			if($stat_nbre_vue[0]['date'] == date("Y-m-d")) {
 
-				if($stat_nbre_vue[0]['heure']==date("H")){
+				if($stat_nbre_vue[0]['heure'] == date("H")){
 					$result_data = array('nbre_vue'=>$stat_nbre_vue[0]['nbre_vue']+1);
 					$response = iUpdateArrayInt(
 						$stat_nbre_vue_table,

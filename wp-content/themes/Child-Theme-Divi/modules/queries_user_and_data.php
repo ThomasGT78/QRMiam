@@ -10,13 +10,14 @@
 // get_etablissement_color_By_Id()
 // get_etablissement_color_By_username()
 
+// get_all_user_docs_By_Id()
 // get_user_banner_By_Id()
 // get_user_documents_By_Id()
 // get_docs_path_By_docs_id()
 // insert_user_doc_By_Id()
 
 /**************************************************************************************************
- *							FUNCTION get_users_data_forMonday_By_userLogin()						  *
+ *							FUNCTION get_users_data_forMonday_By_userLogin()					  *
  **************************************************************************************************/
 
 function get_users_data_forMonday_By_userLogin($user_login) {
@@ -75,7 +76,7 @@ function get_userID_By_username($username) {
 	$users = $wpdb->prefix . 'users';
 	//$username="victor_test";
 
-	$users_sql = "select ID from `".$users."` WHERE `user_login`=\"$username\"";
+	$users_sql = "SELECT ID FROM `".$users."` WHERE `user_login`=\"$username\"";
 	//print_r($etablissement_color=iWhileFetch($users_sql));
 
 	$user_id_raw = iWhileFetch($users_sql);
@@ -94,7 +95,7 @@ function get_userID_and_username() {
 	$users = $wpdb->prefix . 'users';
 	//$username="victor_test";
 
-	$users_sql = "select ID, display_name from `" . $users . "`";
+	$users_sql = "SELECT ID, display_name FROM `" . $users . "`";
 	//print_r($etablissement_color=iWhileFetch($users_sql));
 
 	return $users_array = iWhileFetch($users_sql);
@@ -110,7 +111,7 @@ function get_userID_and_username() {
 function get_user_display_name_By_Id($user_id) {
 	global $wpdb;
 	$users = $wpdb->prefix . 'users';
-	$users_sql = "select display_name from `".$users."` WHERE `ID`=$user_id";
+	$users_sql = "SELECT display_name FROM `".$users."` WHERE `ID`=$user_id";
 
 	return $user_registered_date = iWhileFetch($users_sql);
 } // get_user_display_name_By_Id()
@@ -123,7 +124,7 @@ function get_user_display_name_By_Id($user_id) {
 function get_user_registered_By_Id($user_id) {
 	global $wpdb;
 	$users = $wpdb->prefix . 'users';
-	$users_sql = "select user_registered from `".$users."` WHERE `ID`=$user_id";
+	$users_sql = "SELECT user_registered FROM `".$users."` WHERE `ID`=$user_id";
 
 	return $user_registered_date = iWhileFetch($users_sql);
 } // get_user_registered_By_Id()
@@ -136,7 +137,7 @@ function get_user_registered_By_Id($user_id) {
 function get_etablissement_color_By_Id($user_id) {
 	global $wpdb;
 	$users = $wpdb->prefix . 'users';
-	$users_sql = "select etablissement_color from `".$users."` WHERE `ID`=$user_id";
+	$users_sql = "SELECT etablissement_color FROM `".$users."` WHERE `ID`=$user_id";
 
 	return $etablissement_color = iWhileFetch($users_sql);
 } // get_etablissement_color_By_Id()
@@ -151,12 +152,33 @@ function get_etablissement_color_By_username($username) {
 	$users = $wpdb->prefix . 'users';
 	//$username="victor_test";
 
-	$users_sql = "select etablissement_color from `".$users."` WHERE `user_login`=\"$username\"";
+	$users_sql = "SELECT etablissement_color FROM `".$users."` WHERE `user_login`=\"$username\"";
 	//print_r($etablissement_color=iWhileFetch($users_sql));
 
 	return $etablissement_color = iWhileFetch($users_sql);
 } // get_etablissement_color_By_username()
 
+
+
+
+/**************************************************************************************************
+ *								FUNCTION get_all_user_docs_By_Id(									  *
+ **************************************************************************************************/
+
+/**
+ * Get the banner of the client connected using his ID
+ *
+ * @param [type] $user_id
+ * @return void
+ */
+function get_all_user_docs_By_Id($user_id) {
+	global $wpdb;
+	$cn_user_doce = $wpdb->prefix . 'cn_user_doce';
+
+	$cn_user_doce_sql = "SELECT * FROM `" . $cn_user_doce . "` WHERE `user_id`=$user_id ORDER BY `ordering` ASC";
+
+	return $cn_user_doce_details = iWhileFetch($cn_user_doce_sql);
+} // get_all_user_docs_By_Id()
 
 
 
@@ -174,15 +196,15 @@ function get_user_banner_By_Id($user_id) {
 	global $wpdb;
 	$cn_user_doce = $wpdb->prefix . 'cn_user_doce';
 
-	$cn_user_doce_sql = "select * from `" . $cn_user_doce . "` WHERE `user_id`=$user_id AND `banner`='yes' ORDER BY `ordering` ASC";
+	$cn_user_doce_sql = "SELECT * FROM `" . $cn_user_doce . "` WHERE `user_id`=$user_id AND `banner`='yes' ORDER BY `ordering` ASC";
 
 	return $cn_user_doce_details = iWhileFetch($cn_user_doce_sql);
 } // get_user_banner_By_Id()
 
 
 /**************************************************************************************************
- *									FUNCTION get_user_documents_By_Id()								  *
- **************************************************************************************************/
+*									FUNCTION get_user_documents_By_Id()							  *
+**************************************************************************************************/
 
 /**
  * Récupère les infos des documents dans la table cn_user_doce en fonction de l'id du client 
@@ -195,7 +217,7 @@ function get_user_banner_By_Id($user_id) {
 function get_user_documents_By_Id($user_id) {
 	global $wpdb;
 	$cn_user_doce = $wpdb->prefix . 'cn_user_doce';
-	$cn_user_doce_sql = "select * from `".$cn_user_doce."` WHERE `user_id`=$user_id AND `banner`!='yes' ORDER BY `ordering` ASC";
+	$cn_user_doce_sql = "SELECT * FROM `".$cn_user_doce."` WHERE `user_id`=$user_id AND `banner`!='yes' ORDER BY `ordering` ASC";
 	
 	return $cn_user_doce_details = iWhileFetch($cn_user_doce_sql);
 } // get_user_documents_By_Id()

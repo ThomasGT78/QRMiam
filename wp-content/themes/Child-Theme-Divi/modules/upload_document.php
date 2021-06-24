@@ -28,10 +28,15 @@ function upload_document() {	// end at line 1160
 	// If Logged In
 	if (get_current_user_id()) {	// end at line 1128
 		$user_id = get_current_user_id();
-
+		upload_profil_user_public($user_id);
+		
+		// if($user_id == 645){
+		// 	delete_docs_unused();
+		// }
+		
 		$membership_product_id = get_user_meta($user_id,'membership_product_id',true);
 		// If Premium-Annual or Premium-Mensual or Premium-Essay
-		if ($membership_product_id == 1107 || $membership_product_id == 236950 || $membership_product_id == 238609  || $membership_product_id == 3000) {
+		if ($membership_product_id == 1107 || $membership_product_id == 236950 || $membership_product_id == 238609) {
 			$is_premium = 1;
 			$is_lite = 0;
 			$is_active = 1;
@@ -47,7 +52,7 @@ function upload_document() {	// end at line 1160
 			
 			$user_monday_id = get_user_meta($user_id,'monday_item_id',true);
 			
-			// Get list of document and list of banners from a client with his ID
+			// Get list of documents and banners from a client with his ID
 			$list_user_documents = get_user_documents_By_Id(get_current_user_id());
 			$list_user_documents_count = count($list_user_documents);
 
@@ -76,7 +81,7 @@ function upload_document() {	// end at line 1160
 				if($has_name_style){
 					$name_style = $all_user_meta['name_style'][0];
 				} else {
-					$name_style = "Arial";
+					$name_style = "Roboto";
 				}
 				
 				if($has_name_size){
@@ -161,7 +166,7 @@ function upload_document() {	// end at line 1160
 			if (isset($_POST['submit_add_new_banner'])) {
 				
 				// fix the total number of banner that can be uploaded
-				if ($list_user_banners_count >= 1) {
+				if ($user_id != 40 && $list_user_banners_count >= 1) {
 					?> <div class="umsg"><h2>Vous ne pouvez uploader qu'une seule bannière</h2></div> <?php	
 				}
 				else if ($_FILES['add_banner']) { 
@@ -184,12 +189,15 @@ function upload_document() {	// end at line 1160
 							}
 
 						// Get posted datas
-						$link = $_POST['link'];
+						$new_banner_link_unsafe = $_POST['new_banner_link'];
+						
+						$con = mysqli_connect("localhost:3306","wp_k9v82","4uYnj0QB_9","wp_u7lia");
+						$new_banner_link = mysqli_real_escape_string($con, $new_banner_link_unsafe);
 
 						$file_data = array(
 							'banner'=>'yes',
-							'link'=>$link,
-							'ordering'=> $list_user_documents_count,
+							'link'=>$new_banner_link,
+							'ordering'=> $list_user_banners_count,
 						);
 						$response = insert_user_doc_By_Id($uploaded_file,$file_data);
 						if ($response->success) {
@@ -220,7 +228,7 @@ function upload_document() {	// end at line 1160
 				global $wpdb;
 				$table_user_doce = $wpdb->prefix . 'cn_user_doce';
 
-				get_current_user_id();
+				$user_id = get_current_user_id();
 				$file_path_raw = get_docs_path_By_docs_id($img_id);
 				$file_absolute_path = $file_path_raw[0]['file'];
 				$file_relative_path = str_replace("https://qrmiam.fr", ".", $file_absolute_path);
@@ -243,10 +251,43 @@ function upload_document() {	// end at line 1160
 				if (isset($_POST['btn_delete_document'])) {
 					$list_user_documents = get_user_documents_By_Id(get_current_user_id());
 					$list_user_documents_count = count($list_user_documents);
+					
+					$documents_order = [];
+					foreach ($list_user_documents as $document){
+						array_push($documents_order, $document['id']);
+					}
+
+					foreach ($documents_order as $key => $id) {
+						$result_data = array(
+							'ordering'=>$key
+						);
+						$response_ordering = iUpdateArrayMultiConds(
+							$table_user_doce,
+							$result_data,
+							array('id' => $id));
+						$response_ordering = json_decode($response_ordering);
+					}
 				} 
 				if (isset($_POST['btn_delete_banner'])) {
 					$list_user_banners = get_user_banner_By_Id(get_current_user_id());
 					$list_user_banners_count = count($list_user_banners);
+
+					// Manage order of not deleted banners
+					$banners_order = [];
+					foreach ($list_user_banners as $banner){
+						array_push($banners_order, $banner['id']);
+					}
+
+					foreach ($banners_order as $key => $id) {
+						$result_data = array(
+							'ordering'=>$key
+						);
+						$response_ordering = iUpdateArrayMultiConds(
+							$table_user_doce,
+							$result_data,
+							array('id' => $id));
+						$response_ordering = json_decode($response_ordering);
+					}
 				}
 			}
 
@@ -262,8 +303,12 @@ function upload_document() {	// end at line 1160
 				
 				// Update etablishment name
 				if($_POST['input_etablissement_name']) {
-					$new_etablissement_name = $_POST['input_etablissement_name'];
+
+					$new_etablissement_name_unsafe = $_POST['input_etablissement_name'];
 					
+					$con = mysqli_connect("localhost:3306","wp_k9v82","4uYnj0QB_9","wp_u7lia");
+					$new_etablissement_name = mysqli_real_escape_string($con, $new_etablissement_name_unsafe);
+
 					$result_etablissement_name = array('meta_value' => $new_etablissement_name);
 					
 					$meta_key = 'user_registration_nom_etablissement';
@@ -385,40 +430,38 @@ function upload_document() {	// end at line 1160
 					?> <div class="umsg"><h2>Problème! Mise à jour du nom d'établissement non effectuée!</h2></div> <?php
 				}
 				
-				
-
 			} // if (isset($_POST['btn_update_etablishment']))
 			// UPDATE ETABLISHMENT SUBMITED
 
 
-			/*--------------------------------
-			-	  UPDATE BANNER SUBMITED	--
-			--------------------------------*/		
+			/*------------------------------------------------
+			-	  FUNCTION TO ORDER DOCUMENTS AND BANNER	--
+			------------------------------------------------*/		
 
 			// Displays select's <option> to choose the documents's order 
-			function orderOption($documentsOrder, $document) {
-				foreach ($documentsOrder as $key => $itemId) {
+			function orderOption($documents_order, $document) {
+				foreach ($documents_order as $key => $itemId) {
 					$selectedOption = '<option value='.$key.' selected>'.($key+1).'</option>';
 					$notSelectedOption = '<option value='.$key.'>'.($key+1).'</option>';
-					// var_dump($documentsOrder[$key]);
+					// var_dump($documents_order[$key]);
 					echo ($itemId == $document['id'])? $selectedOption : $notSelectedOption;
 				} 
 			}
 
-			// $documentsOrder must be global with & to be used in orderOption()
-			function actualizeOrder(&$documentsOrder, $optionSelected, $document_id, $key_actual_doc_position) {
-				array_splice($documentsOrder, $key_actual_doc_position, 1);
-				$sliced = array_slice($documentsOrder, $optionSelected);
-				array_splice($documentsOrder, $optionSelected);
-				array_push($documentsOrder, $document_id);
+			// $documents_order must be global with & to be used in orderOption()
+			function actualizeOrder(&$documents_order, $option_selected, $document_id, $key_actual_doc_position) {
+				array_splice($documents_order, $key_actual_doc_position, 1);
+				$sliced = array_slice($documents_order, $option_selected);
+				array_splice($documents_order, $option_selected);
+				array_push($documents_order, $document_id);
 				foreach ($sliced as $item){
-					array_push($documentsOrder, $item );
+					array_push($documents_order, $item );
 				}
 
 				global $wpdb;
 				$table_user_doce = $wpdb->prefix . 'cn_user_doce';
 
-				foreach ($documentsOrder as $key => $id) {
+				foreach ($documents_order as $key => $id) {
 					$result_data = array(
 						'ordering'=>$key
 					);
@@ -443,12 +486,17 @@ function upload_document() {	// end at line 1160
 						?> <div class="umsg"><h2>Il y a eu un problème, modification de l'ordre des bannières non effectuée!</h2></div> <?php
 					}
 				}
-			} // actualizeOrder
+			} // END actualizeOrder()
+
+
+			/*--------------------------------
+			-	  UPDATE BANNER SUBMITED	--
+			--------------------------------*/	
 
 			// Save the id's banner list in a table to set the order, will be used to manage the order
-			$bannersOrder = [];
+			$banners_order = [];
 			foreach ($list_user_banners as $banner){
-				array_push($bannersOrder, $banner['id']);
+				array_push($banners_order, $banner['id']);
 			}
 
 			// Action after POST update banner
@@ -457,13 +505,16 @@ function upload_document() {	// end at line 1160
 				$table_user_doce = $wpdb->prefix . 'cn_user_doce';
 
 				$banner_id = $_POST['banner_id'];
-				$banner_link = $_POST['link'];
 				
+				$banner_link_unsafe = $_POST['banner_link'];
+				$con = mysqli_connect("localhost:3306","wp_k9v82","4uYnj0QB_9","wp_u7lia");
+				$banner_link = mysqli_real_escape_string($con, $banner_link_unsafe);
+
 				/***	ORDER MANAGEMENT    ***/
 				$key_actual_ban_position = $_POST['banner_position'];
-				$optionSelected = $_POST['banner_ordering'];
+				$option_selected = $_POST['banner_ordering'];
 
-				actualizeOrder($bannersOrder, $optionSelected, $banner_id, $key_actual_ban_position);
+				actualizeOrder($banners_order, $option_selected, $banner_id, $key_actual_ban_position);
 				
 
 				/***	BANNER MANAGEMENT    ***/
@@ -499,9 +550,9 @@ function upload_document() {	// end at line 1160
 			--------------------------------*/
 
 			// Save the id's document list in a table to set the order, will be used to manage the order
-			$documentsOrder = [];
+			$documents_order = [];
 			foreach ($list_user_documents as $document){
-				array_push($documentsOrder, $document['id']);
+				array_push($documents_order, $document['id']);
 			}
 
 			// Action after POST update document
@@ -513,14 +564,17 @@ function upload_document() {	// end at line 1160
 
 				/***	ORDER MANAGEMENT    ***/
 				$key_actual_doc_position = $_POST['document_position'];
-				$optionSelected = $_POST['document_ordering'];
+				$option_selected = $_POST['document_ordering'];
 
-				actualizeOrder($documentsOrder, $optionSelected, $document_id, $key_actual_doc_position);
+				actualizeOrder($documents_order, $option_selected, $document_id, $key_actual_doc_position);
 
-
+				
 				/***	DOCUMENT MANAGEMENT (IF PREMIUM)    ***/
 				if ($is_premium){
-					$title = $_POST['title'];
+					$title_unsafe = $_POST['title'];
+					$con = mysqli_connect("localhost:3306","wp_k9v82","4uYnj0QB_9","wp_u7lia");
+					$title = mysqli_real_escape_string($con, $title_unsafe);
+
 					$title_color = $_POST['title_color'];
 					$cn_from = $_POST['cn_from'];
 					$cn_to = $_POST['cn_to'];
@@ -557,45 +611,14 @@ function upload_document() {	// end at line 1160
 
 
 
-			// test
-			function actualizeOrderTest($documentsOrder, $document, $key_actual_doc_position) {
-				if (isset($_GET['document_ordering'])) {
-					$optionSelected = $_GET['document_ordering'];
-				}
-
-				array_splice($documentsOrder, $key_actual_doc_position, 1);
-				$sliced = array_slice($documentsOrder, $optionSelected);
-				array_splice($documentsOrder, $optionSelected);
-				array_push($documentsOrder, $document['id']);
-				foreach ($sliced as $item){
-					array_push($documentsOrder, $item );
-				}
-
-				// echo print_r('documentsOrder: ' . $documentsOrder . '<br>');
-
-				global $wpdb;
-				$table_user_doce = $wpdb->prefix . 'cn_user_doce';
-
-				foreach ($documentsOrder as $key => $id) {
-					$result_data = array(
-						'ordering'=>$key
-					);
-					$response = iUpdateArrayMultiConds(
-						$table_user_doce,
-						$result_data,
-						array('id' => $id));
-					$response = json_decode($response);
-				}
-			} // actualizeOrder
-
 		?>
 
 
 
 
-	<!--*************************************************************************************************
-	*							PAGE HTML	-	Block Modifications du profil	/upload					*
-	**************************************************************************************************-->
+<!--*************************************************************************************************
+*							PAGE HTML	-	Block Modifications du profil	/upload					*
+**************************************************************************************************-->
 
 		<div class="user-registration ur-frontend-form ur-frontend-form--flat">
 
@@ -621,29 +644,38 @@ function upload_document() {	// end at line 1160
 					<!-- Nom d'établissement -->
 					<div class="div-marg-10px">
 						<label for="input_etablissement_name">Nom de l'établissement </label>	
-						<input type="text" class="input-text" name="input_etablissement_name" value="<?php echo $user_etablissement_name; ?>">	
+						<input type="text" class="input-text" name="input_etablissement_name" id="input_etablissement_name" value="<?php echo $user_etablissement_name; ?>">	
 					</div>
 					
 					<!-- Font-Style -->
 					<div class="div-marg-10px">
 						<label>Style du nom </label>
-						<select name="input_name_style" class="select-style" >
-							<option style="font-family: Arial;" value="Arial" <?php echo ($name_style == "Arial")? "selected": "" ;?>>Arial</option>
-							<option style="font-family: Baskerville;" value="Baskerville" <?php echo ($name_style == "Baskerville")? "selected": "" ;?>>Baskerville</option>
-							<option style="font-family: Bodoni MT;" value="Bodoni MT" <?php echo ($name_style == "Bodoni MT")? "selected": "" ;?>>Bodoni MT</option>
-							<option style="font-family: Calibri;" value="Calibri" <?php echo ($name_style == "Calibri")? "selected": "" ;?>>Calibri</option>
-							<option style="font-family: Calisto MT;" value="Calisto MT" <?php echo ($name_style == "Calisto MT")? "selected": "" ;?>>Calisto MT</option>
-							<option style="font-family: Century Gothic;" value="Century Gothic" <?php echo ($name_style == "Century Gothic")? "selected": "" ;?>>Century Gothic</option>
-							<option style="font-family: Georgia;" value="Georgia" <?php echo ($name_style == "Georgia")? "selected": "" ;?>>Georgia</option>
-							<option style="font-family: Helvetica;" value="Helvetica" <?php echo ($name_style == "Helvetica")? "selected": "" ;?>>Helvetica</option>
-							<option style="font-family: Impact;" value="Impact" <?php echo ($name_style == "Impact")? "selected": "" ;?>>Impact</option>
+						<select name="input_name_style" class="select-style">
+							<option style="font-family: Arvo;" value="Arvo" <?php echo ($name_style == "Arvo")? "selected": "" ;?>>Arvo</option>
+
+							<option style="font-family: Bebas Neue;" value="Bebas Neue" <?php echo ($name_style == "Bebas Neue")? "selected": "" ;?>>Bebas Neue</option>
+
+							<option style="font-family: Bodoni Moda;" value="Bodoni Moda" <?php echo ($name_style == "Bodoni Moda")? "selected": "" ;?>>Bodoni Moda</option>
+
+							<option style="font-family: Bree Serif;" value="Bree Serif" <?php echo ($name_style == "Bree Serif")? "selected": "" ;?>>Bree Serif</option>
+
+							<option style="font-family: Crimson Text;" value="Crimson Text" <?php echo ($name_style == "Crimson Text")? "selected": "" ;?>>Crimson Text</option>
+							
+							<option style="font-family: Indie Flower;" value="Indie Flower" <?php echo ($name_style == "Indie Flower")? "selected": "" ;?>>Indie Flower</option>
+
+							<option style="font-family: Libre Baskerville;" value="Libre Baskerville" <?php echo ($name_style == "Libre Baskerville")? "selected": "" ;?>>Libre Baskerville</option>
+
+							<option style="font-family: Oswald;" value="Oswald" <?php echo ($name_style == "Oswald")? "selected": "" ;?>>Oswald</option>
+
+							<option style="font-family: Roboto;" value="Roboto" <?php echo ($name_style == "Roboto")? "selected": "" ;?>>Roboto</option>
+							
 						</select>	
 					</div>
 					
 					<!-- Font-Size -->
 					<div class="div-marg-10px">
 						<label>Taille du nom </label>	
-						<input type="number" class="input-number" name="input_name_size" value="<?php echo $name_size; ?>" min=12 max=50 step="2">	
+						<input type="number" class="input-number" name="input_name_size" value="<?php echo $name_size; ?>" min=20 max=70 step="2">	
 					</div>
 
 					<!-- Couleur d'établissement -->
@@ -722,7 +754,7 @@ function upload_document() {	// end at line 1160
 							</div>
 							<div>
 								<label>Lien de la bannière</label>
-								<input type="text" name="link" class="input-text" placeholder="Lien">
+								<input type="text" name="new_banner_link" class="input-text" placeholder="Lien">
 							</div>
 							<div class="div-btn-submit">
 								<button type="submit" class="cn_btn gif_load_onClick et_pb_button" name="submit_add_new_banner">Ajouter</button>
@@ -765,7 +797,7 @@ function upload_document() {	// end at line 1160
 												<label>Ordre :</label>
 												<select class="select-item-order" name="banner_ordering" >
 													<?php 
-													orderOption($bannersOrder, $banner);
+													orderOption($banners_order, $banner);
 													?>
 												</select>
 											</div>
@@ -773,7 +805,7 @@ function upload_document() {	// end at line 1160
 											<!-- LINK -->
 											<div class="div-banner-link">
 												<label>Lien :</label>
-												<input type="text" name="link" class="input-text" placeholder="Lien" value="<?php echo $banner['link']; ?>">
+												<input type="text" name="banner_link" class="input-text" placeholder="Lien" value="<?php echo $banner['link']; ?>">
 												
 											</div>
 											<div class="div-a-test-link">
@@ -866,7 +898,7 @@ function upload_document() {	// end at line 1160
 							</div> <!-- END Display Documents -->
 
 							<!------------------------
-							-	 UPLOAD DOCUMENT	-- 
+							-	 UPDATE DOCUMENT	-- 
 							-------------------------->
 							<div class="div-item-form">
 
@@ -881,9 +913,7 @@ function upload_document() {	// end at line 1160
 										<div class="div-item-order" >
 											<label>Ordre : </label>
 											<select class="select-item-order" name="document_ordering" >
-												<?php 
-												orderOption($documentsOrder, $document);
-												?>
+												<?php orderOption($documents_order, $document); ?>
 											</select>
 										</div>
 
@@ -953,12 +983,85 @@ function upload_document() {	// end at line 1160
 		</div> <!-- user-registration -->
 
 
-	<!--*************************************************************************************************
-	*											STYLE CSS												*
-	**************************************************************************************************-->
+<!--*************************************************************************************************
+*											STYLE CSS												*
+**************************************************************************************************-->
 
 
 		<style type="text/css" media="screen">
+			@font-face {
+				font-family: 'Arvo';
+				font-style: normal;
+				font-weight: 400;
+				font-display: swap;
+				src: url(https://fonts.gstatic.com/s/arvo/v14/tDbD2oWUg0MKqScQ7Q.woff2) format('woff2');
+				unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+			}
+			@font-face {
+				font-family: 'Bebas Neue';
+				font-style: normal;
+				font-weight: 400;
+				font-display: swap;
+				src: url(https://fonts.gstatic.com/s/bebasneue/v2/JTUSjIg69CK48gW7PXoo9Wlhyw.woff2) format('woff2');
+				unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+			}
+			@font-face {
+				font-family: 'Bodoni Moda';
+				font-style: normal;
+				font-weight: 400;
+				font-display: swap;
+				src: url(https://fonts.gstatic.com/s/bodonimoda/v7/aFT67PxzY382XsXX63LUYL6GYFcan6NJrKp-VPjfJMShrpsGFUt8oU7a8Il4tGjM.woff2) format('woff2');
+				unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+			}
+			@font-face {
+				font-family: 'Bree Serif';
+				font-style: normal;
+				font-weight: 400;
+				font-display: swap;
+				src: url(https://fonts.gstatic.com/s/breeserif/v10/4UaHrEJCrhhnVA3DgluA96rp5w.woff2) format('woff2');
+				unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+			}
+			@font-face {
+				font-family: 'Crimson Text';
+				font-style: normal;
+				font-weight: 400;
+				font-display: swap;
+				src: url(https://fonts.gstatic.com/s/crimsontext/v11/wlp2gwHKFkZgtmSR3NB0oRJfbwhT.woff2) format('woff2');
+				unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+			}
+			@font-face {
+				font-family: 'Indie Flower';
+				font-style: normal;
+				font-weight: 400;
+				font-display: swap;
+				src: url(https://fonts.gstatic.com/s/indieflower/v12/m8JVjfNVeKWVnh3QMuKkFcZVaUuH.woff2) format('woff2');
+				unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+			}
+			@font-face {
+				font-family: 'Libre Baskerville';
+				font-style: normal;
+				font-weight: 400;
+				font-display: swap;
+				src: url(https://fonts.gstatic.com/s/librebaskerville/v9/kmKnZrc3Hgbbcjq75U4uslyuy4kn0qNZaxM.woff2) format('woff2');
+				unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+			}
+			@font-face {
+				font-family: 'Oswald';
+				font-style: normal;
+				font-weight: 400;
+				font-display: swap;
+				src: url(https://fonts.gstatic.com/s/oswald/v36/TK3_WkUHHAIjg75cFRf3bXL8LICs1_FvsUZiZQ.woff2) format('woff2');
+				unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+			}
+			@font-face {
+				font-family: 'Roboto';
+				font-style: normal;
+				font-weight: 400;
+				font-display: swap;
+				src: url(https://fonts.gstatic.com/s/roboto/v27/KFOmCnqEu92Fr1Mu4mxK.woff2) format('woff2');
+				unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+			}
+
 			.cn_btn{
 				/* font-weight: bold; */
 				background: #d6d6d6;
@@ -1238,7 +1341,7 @@ function upload_document() {	// end at line 1160
 				.update-blocks label{
 					display: flex !important;
 					flex-wrap: wrap;
-					min-width: min-content  !important;
+					min-width: min-content !important;
 					width: 100% !important;
 				}
 				.update-blocks label span{
@@ -1307,16 +1410,13 @@ function upload_document() {	// end at line 1160
 					text-align-last: center;
 					font-weight: 600;
 				}
-				/* .user-registration {
-					width: 110% !important;
-				} */
 			}
 		</style>
 
 
-	<!--*************************************************************************************************
-	*											SCRIPT JS												*
-	**************************************************************************************************-->
+<!--*************************************************************************************************
+*											SCRIPT JS												*
+**************************************************************************************************-->
 
 		<script type="text/javascript">
 			(function( $ ) {

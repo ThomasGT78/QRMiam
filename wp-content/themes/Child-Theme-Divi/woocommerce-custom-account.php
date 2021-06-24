@@ -30,7 +30,7 @@ function bbloomer_remove_subscriptions_my_account( $items ) {
 
 add_action( 'woocommerce_account_edit-account_endpoint', 'woocommerce_account_edit_address' );
 add_action( 'woocommerce_account_edit-account_endpoint', 'woocommerce_account_payment_methods' );
-add_action( 'woocommerce_account_orders_endpoint', array(new WCS_Query(),'endpoint_content' ) );
+// add_action( 'woocommerce_account_orders_endpoint', array(new WCS_Query(),'endpoint_content' ) );
 
 
 //Ajout des titres aux sections

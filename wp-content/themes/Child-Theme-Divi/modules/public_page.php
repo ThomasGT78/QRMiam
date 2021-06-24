@@ -62,11 +62,20 @@ function cn_public_page(){ // Fin ligne 1484
 		$user_id = get_userID_By_username($username);
 		// echo $user_id."<br>";
 
+		// TEST POP-UP
+		if ($user_id == 40){
+			// pop_up($user_id);
+			// delete_docs_unused();
+			// delete_docs_users_unused();
+		}
+
+
 		// TEST
 		// if ($user_id == 40 OR $user_id == 645){
 		// 	// echo "OK";
 		// 	upload_user_statut($user_id);
 		// }
+		upload_profil_user_public($user_id);
 
 			/****************************************************
 			*	Manage Subscription type and expiration date	*
@@ -130,15 +139,12 @@ function cn_public_page(){ // Fin ligne 1484
 
 		$stat_nbre_vue = get_stat_nbre_vue_By_user_id_now($user_id);
 		$date = date("Y-m-d");
+		// $date = "'" . date("Y-m-d") . "'";
 		$heure = date("H");
 
-		//Si il existe déja un champ pour l'user_id
+		//Si il existe déja un champ pour l'user_id à la date et heure de maintenant
 		if($stat_nbre_vue){
 
-			//Si il existe déja un champ pour le jour
-			if($stat_nbre_vue[0]['date'] == date("Y-m-d")) {
-
-				if($stat_nbre_vue[0]['heure'] == date("H")){
 					$result_data = array('nbre_vue' => $stat_nbre_vue[0]['nbre_vue']+1);
 
 					$response = iUpdateArrayMultiConds(
@@ -150,9 +156,7 @@ function cn_public_page(){ // Fin ligne 1484
 							'heure' => $heure
 						)
 					);
-					$response = json_decode($response);		
-				}	
-			}
+					$response = json_decode($response);
 		}
 		else {
 			insert_stat_nbre_vue();
@@ -185,7 +189,7 @@ function cn_public_page(){ // Fin ligne 1484
 				// $name_style = $all_user_meta['name_style'][0];
 				$name_style = $all_user_meta['name_style'];
 			} else {
-				$name_style = "Arial";
+				$name_style = "Roboto";
 			}
 			if($all_user_meta['name_size']){
 				// $name_size = $all_user_meta['name_size'][0]."px";
@@ -204,6 +208,79 @@ function cn_public_page(){ // Fin ligne 1484
 
 
 			<style type="text/css" media="screen">
+				@font-face {
+					font-family: 'Arvo';
+					font-style: normal;
+					font-weight: 400;
+					font-display: swap;
+					src: url(https://fonts.gstatic.com/s/arvo/v14/tDbD2oWUg0MKqScQ7Q.woff2) format('woff2');
+					unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+				}
+				@font-face {
+					font-family: 'Bebas Neue';
+					font-style: normal;
+					font-weight: 400;
+					font-display: swap;
+					src: url(https://fonts.gstatic.com/s/bebasneue/v2/JTUSjIg69CK48gW7PXoo9Wlhyw.woff2) format('woff2');
+					unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+				}
+				@font-face {
+					font-family: 'Bodoni Moda';
+					font-style: normal;
+					font-weight: 400;
+					font-display: swap;
+					src: url(https://fonts.gstatic.com/s/bodonimoda/v7/aFT67PxzY382XsXX63LUYL6GYFcan6NJrKp-VPjfJMShrpsGFUt8oU7a8Il4tGjM.woff2) format('woff2');
+					unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+				}
+				@font-face {
+					font-family: 'Bree Serif';
+					font-style: normal;
+					font-weight: 400;
+					font-display: swap;
+					src: url(https://fonts.gstatic.com/s/breeserif/v10/4UaHrEJCrhhnVA3DgluA96rp5w.woff2) format('woff2');
+					unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+				}
+				@font-face {
+					font-family: 'Crimson Text';
+					font-style: normal;
+					font-weight: 400;
+					font-display: swap;
+					src: url(https://fonts.gstatic.com/s/crimsontext/v11/wlp2gwHKFkZgtmSR3NB0oRJfbwhT.woff2) format('woff2');
+					unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+				}
+				@font-face {
+					font-family: 'Indie Flower';
+					font-style: normal;
+					font-weight: 400;
+					font-display: swap;
+					src: url(https://fonts.gstatic.com/s/indieflower/v12/m8JVjfNVeKWVnh3QMuKkFcZVaUuH.woff2) format('woff2');
+					unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+				}
+				@font-face {
+					font-family: 'Libre Baskerville';
+					font-style: normal;
+					font-weight: 400;
+					font-display: swap;
+					src: url(https://fonts.gstatic.com/s/librebaskerville/v9/kmKnZrc3Hgbbcjq75U4uslyuy4kn0qNZaxM.woff2) format('woff2');
+					unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+				}
+				@font-face {
+					font-family: 'Oswald';
+					font-style: normal;
+					font-weight: 400;
+					font-display: swap;
+					src: url(https://fonts.gstatic.com/s/oswald/v36/TK3_WkUHHAIjg75cFRf3bXL8LICs1_FvsUZiZQ.woff2) format('woff2');
+					unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+				}
+				@font-face {
+					font-family: 'Roboto';
+					font-style: normal;
+					font-weight: 400;
+					font-display: swap;
+					src: url(https://fonts.gstatic.com/s/roboto/v27/KFOmCnqEu92Fr1Mu4mxK.woff2) format('woff2');
+					unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+				}
+
 				.umsg{
 					background: #fff;
 					text-align: center;

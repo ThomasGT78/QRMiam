@@ -1,10 +1,11 @@
 <?php
 
+// NOT USED ANYMORE -> MANAGED BY DIVI
 /****************************************************************************************************
 *						FUNCTION membership_product()	/abonnement									*
 ****************************************************************************************************/
 
-add_shortcode( 'membership_product' , 'membership_product' );
+// add_shortcode( 'membership_product' , 'membership_product' );
 
 function membership_product() { // en at line 1797
 	ob_start();

@@ -23,9 +23,14 @@ function gen_qrcode() {
 		?>
 
 		<button type="button" name="btnDownloadQR" class="et_pb_button btn btn-validate" onclick="wpkqcg_qrcode_preview_download()">Télécharger</button>
+		<button type="button" name="btnDownloadQR" class="et_pb_button btn btn-validate" onclick="go_to_my_page()" >Visualiser votre page</button>
 	</div>
 
 <script>
+	function go_to_my_page(){
+		window.open("<?php echo $qrcode_url ?>", "<?php echo $user->user_login ?>");
+	}
+	
 	function wpkqcg_qrcode_preview_download() {
 		var qrcode = document.getElementsByClassName('wpkqcg_qrcode');
 		if (qrcode.length !== 0) {

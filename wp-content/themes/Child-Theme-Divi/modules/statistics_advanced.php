@@ -10,8 +10,30 @@
 add_shortcode('user_basic_statistics', 'basicStats');
 
 function basicStats() {
-    $stat_nbre_vue = get_stat_nbre_vue_By_user_id(get_current_user_id());
-    $stat_nbre_vue_today = get_stat_nbre_vue_By_user_id_today(get_current_user_id());
+	$user_id = get_current_user_id();
+
+	// Profil admin
+	if(in_array($user_id, array(1, 40, 588, 589))){
+		$admin = true;
+	}
+	if ($admin){
+		$stat_nbre_vue_all_this_hour = get_stat_nbre_vue_all_users_this_hour();
+		$stat_nbre_vue_all_today = get_stat_nbre_vue_all_users_today();
+		
+		$vue_all_this_hour = $stat_nbre_vue_all_this_hour[0]['somme'];
+		$vue_all_today = $stat_nbre_vue_all_today[0]['somme'];
+		?>
+		<div class="basic-stats">
+			<p>
+				Les cartes et menus ont été vues 
+				<strong><?= ($vue_all_this_hour == 0)? 0 : $vue_all_this_hour ?></strong> fois cette heure et 
+				<strong><?= ($vue_all_today == 0)? 0 : $vue_all_today ?></strong> fois au aujourd'hui.
+			</p>
+		</div>
+		<?php
+	}
+    $stat_nbre_vue = get_stat_nbre_vue_By_user_id($user_id);
+    $stat_nbre_vue_today = get_stat_nbre_vue_By_user_id_today($user_id);
 
     $vue_today = $stat_nbre_vue_today[0]['somme'];
     $vue_total = $stat_nbre_vue[0]['somme'];
@@ -49,7 +71,14 @@ function advancedStats() {
 		crossorigin="anonymous">
 	</script>
 	<?php
-	$membership_product_id = get_user_meta(get_current_user_id(),'membership_product_id',true);
+	$user_id = get_current_user_id();
+	
+	// Profil admin
+	if(in_array($user_id, array(1, 40, 588, 589))){
+		$admin = true;
+	}
+
+	$membership_product_id = get_user_meta($user_id,'membership_product_id',true);
 	
 	if ($membership_product_id == 1107 || $membership_product_id == 236950 || $membership_product_id == 238608) {
 		$is_premium = 1;
@@ -72,7 +101,6 @@ function advancedStats() {
 
 	$firstDayMonth = $actualYear . "-" . $actualMonth . "-01"; 
 	
-	$user_id = get_current_user_id();
 
 	function displayDate ($postedDate) {
 		list($year, $month, $day) = explode('-', $postedDate);
@@ -90,7 +118,7 @@ function advancedStats() {
 		$postedEndDate = $today;
 
 		// Get Registered Date of the user and make it the Start Date
-		$user_registered = get_user_registered_By_Id(get_current_user_id());
+		$user_registered = get_user_registered_By_Id($user_id);
 		$user_registered_date_and_hour = new DateTime($user_registered[0]['user_registered']);
 		$postedStartDate = $user_registered_date_and_hour->format('Y-m-d');
 		
@@ -246,10 +274,10 @@ function advancedStats() {
 				<!-- INPUT DATALIST -->
 				<?php 
 				// Choisir un user pour voir ces stats (if admin)
-				if(in_array(get_current_user_id(), array(1, 40, 588, 589))){
+				if($admin){
 					$users_array = get_userID_and_username();
 					//print_r($users_array);
-				?>
+					?>
 					<div class="user-search-block">
 						<div class="user-search-label"><label for="user_search_input">Rechercher un utilisateur: </label></div>
 
@@ -266,7 +294,7 @@ function advancedStats() {
 							<button type="button" name="btn_clear" id="btn_clear" class="btn-clear">Clear</button>
 						</div>
 					</div>
-				<?php 
+					<?php 
 				} 
 				?>
 				<br>
@@ -403,7 +431,7 @@ function advancedStats() {
 		// IF FORM SUBMITED
 		if(isset($_POST['btn_submit_date']) OR $period OR isset($_POST['radio_choice'])) {
 			
-			/**    IF POSTED USER (admin only)    **/
+			/**    IF POSTED USERNAME (for research by admin only)    **/
 			if(isset($username)){
 
 				if($username == null){ // Empty User Field
@@ -430,12 +458,12 @@ function advancedStats() {
 				}
 			}
 
-			show_stats_view($user_id,$postedStartDate, $postedEndDate, $canvas_type);
+			show_stats_view($user_id,$admin, $username, $postedStartDate, $postedEndDate, $canvas_type);
 
 		} // END If form submited
 		else { // If nothing posted (arriving on the page or actualizing)
 			echo "<br><h4>Statistiques du <strong>$frenchToday</strong>:</h4>";
-			show_stats_view($user_id,$today, $postedEndDate, $canvas_type);
+			show_stats_view($user_id,$admin, $username, $today, $postedEndDate, $canvas_type);
 		}
 		?>
 	</div>
@@ -568,10 +596,19 @@ function advancedStats() {
 *									FUNCTION show_stats_view()										*
 ****************************************************************************************************/
 
-function show_stats_view($user_id, $start_date, $end_date, $canvas_type) {
-
-	$stat_nbre_vue = get_stat_nbre_vue_By_user_id_And_Date_hourly($user_id,$start_date, $end_date);
-	// echo print_r($stat_nbre_vue);
+function show_stats_view($user_id, $admin, $username, $start_date, $end_date, $canvas_type) {
+	if($admin && $username == null){ // Show data for all users
+		$stat_nbre_vue = get_stat_nbre_vue_all_users_per_date_hourly($start_date, $end_date);
+		
+	}
+	else { // show data for current user (or user choosen by admin)
+		if($username){
+			$user_id = get_userID_By_username($username);
+		}
+		$stat_nbre_vue = get_stat_nbre_vue_By_user_id_And_Date_hourly($user_id,$start_date, $end_date);
+		
+	}
+	
 	if($stat_nbre_vue[0]['nbre_vue'] != 0) {
 
 		for ($i=0; $i < sizeof($stat_nbre_vue); $i++) {
@@ -653,7 +690,7 @@ function show_stats_view($user_id, $start_date, $end_date, $canvas_type) {
 				});
 			</script>
 		<?php
-			show_average_per_hour($user_id, $start_date, $end_date, $canvas_type);
+			show_average_per_hour($user_id, $admin, $username, $start_date, $end_date, $canvas_type);
 		}
 	} // if($stat_nbre_vue[0]['nbre_vue'] != 0)
 	else {
@@ -668,7 +705,7 @@ function show_stats_view($user_id, $start_date, $end_date, $canvas_type) {
 *									FUNCTION show_average_per_hour()								*
 ****************************************************************************************************/
 
-function show_average_per_hour($user_id, $start_date, $end_date, $canvas_type) { ?>
+function show_average_per_hour($user_id, $admin, $username, $start_date, $end_date, $canvas_type) { ?>
 	<br><h3>Moyennes des vues par heures sur la période:</h3>
 	<div class="block-button-flex">
 		<div class="div-btn-avg-view">
@@ -680,7 +717,17 @@ function show_average_per_hour($user_id, $start_date, $end_date, $canvas_type) {
 	</div>
 
 	<?php
-	$stat_nbre_vue = get_average_vues_By_user_id_And_Date_hourly($user_id, $start_date, $end_date);
+	if($admin && $username == null){ // Show data for all users
+		$stat_nbre_vue = get_average_vues_all_users_per_date_hourly($start_date, $end_date);
+		
+	}
+	else { // show data for current user (or user choosen by admin)
+		if($username){
+			$user_id = get_userID_By_username($username);
+		}
+		$stat_nbre_vue = get_average_vues_By_user_id_And_Date_hourly($user_id, $start_date, $end_date);
+	
+	}
 	
 	if($stat_nbre_vue[0]['avgVues'] != 0) {
 

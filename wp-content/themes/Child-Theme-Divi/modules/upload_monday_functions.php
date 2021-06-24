@@ -58,6 +58,7 @@ function insert_user_registered($user_id) {
 /****************************************************************************************************
 *									FUNCTION upload_profil_user()									*
 ****************************************************************************************************/
+// Update some data into Monday after the user update his profile with a form
 
 add_action('profile_update','upload_profil_user');
 
@@ -94,11 +95,44 @@ function upload_profil_user() {
 
 }
 
+/****************************************************************************************************
+*									FUNCTION upload_profil_user()									*
+****************************************************************************************************/
+// Update some data into Monday after the user go on the page to manage documents or when someone visit his public page
 
+
+function upload_profil_user_public($user_id) {
+
+    // Get email
+    $current_user = get_userdata($user_id);
+    $email = $current_user->user_email;
+    
+    // Get data from usermeta table
+    $usermeta_table_data = get_user_meta($user_id);
+
+    // Item ID Monday
+    $monday_item_id = $usermeta_table_data['monday_item_id'][0];
+
+    // Tel
+    $phone = $usermeta_table_data['user_registration_tel'][0];
+
+    // Statut
+    $membership_product_id = $usermeta_table_data['membership_product_id'][0];
+    $list_statut = array('1105' => 2, '236951' => 158, '1107' => 4, '236950' => 8, '238609' => 3, '1000' => 0, '1500' => 1, '2000' => 10, '3000' => 1);
+    $statut = $list_statut[$membership_product_id];
+
+    // Date de souscription
+    $membership_product_date = $usermeta_table_data['membership_product_date'][0];
+
+    
+    update_user_info($monday_item_id, $statut, $membership_product_date, $email, $phone);
+
+}
 
 /****************************************************************************************************
 *								FUNCTION upload_user_registered()									*
 ****************************************************************************************************/
+// Insert a new line in Monday after a vistor register on the web site
 
 add_action('wp_login','upload_user_registered');
 
@@ -151,7 +185,7 @@ function upload_user_registered($user_login) {
 
 
 /****************************************************************************************************
-*								FUNCTION upload_user_statut()									*
+*								FUNCTION upload_user_statut()   									*
 ****************************************************************************************************/
 
 /**

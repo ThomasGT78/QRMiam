@@ -103,7 +103,7 @@ get_template_part( 'modules/statistics_advanced' );
 // stats_page()
 
 
-get_template_part( 'modules/user_public_banner' );
+get_template_part( 'modules/public_banner' );
 // user_banner()
 
 
@@ -117,13 +117,16 @@ get_template_part( 'modules/user_profile_fields' );
 // wk_save_custom_user_profile_fields()
 
 
+get_template_part( 'modules/pop_up' );
+
+
+get_template_part( 'modules/delete_documents' );
+
+
                 /********************
                 *    MONDAY SYNC    *
                 ********************/
 
-// get_template_part( 'monday/upload_monday_functions' );
-// get_template_part( 'monday/monday_functions' );
-// get_template_part( 'monday/upload_monday_functions' );
 get_template_part( 'modules/upload_monday_functions' );
 // upload_profil_user()
 // upload_user_registered()
