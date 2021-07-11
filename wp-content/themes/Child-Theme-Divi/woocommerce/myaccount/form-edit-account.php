@@ -17,7 +17,16 @@
 
 defined( 'ABSPATH' ) || exit;
 
-do_action( 'woocommerce_before_edit_account_form' ); ?>
+$user_id = get_current_user_id();
+do_action( 'woocommerce_before_edit_account_form' ); 
+
+$user_tel = get_user_meta($user_id,'user_registration_tel',true);
+
+?>
+
+<!-------------------------------------------------------------------------------------------------------
+-												INFO PERSO												-
+-------------------------------------------------------------------------------------------------------->
 
 <form class="woocommerce-EditAccountForm edit-account" action="" method="post" <?php do_action( 'woocommerce_edit_account_form_tag' ); ?> >
 
@@ -44,6 +53,12 @@ do_action( 'woocommerce_before_edit_account_form' ); ?>
 		<input type="email" class="woocommerce-Input woocommerce-Input--email input-text" name="account_email" id="account_email" autocomplete="email" value="<?php echo esc_attr( $user->user_email ); ?>" />
 	</p>
 
+	<!-- CUSTOM PHONE FIELD -->
+	<p class="woocommerce-form-row woocommerce-form-row--wide form-row form-row-wide">
+		<label for="account_tel"><?php echo esc_attr( 'Téléphone'); ?>&nbsp;<span class="required">*</span></label>
+		<input type="tel" class="woocommerce-Input woocommerce-Input--text input-text" name="account_tel" id="account_tel" autocomplete="tel" value="<?php echo esc_attr( $user_tel ); ?>" />
+	</p>
+
 	<?php do_action( 'woocommerce_edit_account_form' ); ?>
 
 	<p>
@@ -56,7 +71,11 @@ do_action( 'woocommerce_before_edit_account_form' ); ?>
 </form>
 <br>
 
-<!-- PASSWORD -->
+
+<!-------------------------------------------------------------------------------------------------------
+-												PASSWORD												-
+-------------------------------------------------------------------------------------------------------->
+
 <form class="woocommerce-EditAccountForm edit-account" action="" method="post" <?php do_action( 'woocommerce_edit_account_form_tag' ); ?> >
 	<fieldset>
 		<h2><?php esc_html_e( 'Password change', 'woocommerce' ); ?> :</h2>
@@ -78,7 +97,7 @@ do_action( 'woocommerce_before_edit_account_form' ); ?>
 	<div class="clear"></div>
 
 	<?php do_action( 'woocommerce_edit_account_form' ); ?>
-
+		<!-- HIDDEN REQUIRED INPUT TO ALLOW THE CHANGE OF PASSWORD -->
 		<input type="hidden" class="woocommerce-Input woocommerce-Input--text input-text" name="account_first_name" id="account_first_name" autocomplete="given-name" value="<?php echo esc_attr( $user->first_name ); ?>" />	
 		<input type="hidden" class="woocommerce-Input woocommerce-Input--text input-text" name="account_last_name" id="account_last_name" autocomplete="family-name" value="<?php echo esc_attr( $user->last_name ); ?>" />
 		<input type="hidden" class="woocommerce-Input woocommerce-Input--text input-text" name="account_display_name" id="account_display_name" value="<?php echo esc_attr( $user->display_name ); ?>" />

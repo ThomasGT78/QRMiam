@@ -24,6 +24,7 @@ function basicStats() {
 		$vue_all_today = $stat_nbre_vue_all_today[0]['somme'];
 		?>
 		<div class="basic-stats">
+		<h5>Nombres de vues tout utilisateurs confondus sur la journée :</h5>
 			<p>
 				Les cartes et menus ont été vues 
 				<strong><?= ($vue_all_this_hour == 0)? 0 : $vue_all_this_hour ?></strong> fois cette heure et 
@@ -32,6 +33,8 @@ function basicStats() {
 		</div>
 		<?php
 	}
+
+	// All Users
     $stat_nbre_vue = get_stat_nbre_vue_By_user_id($user_id);
     $stat_nbre_vue_today = get_stat_nbre_vue_By_user_id_today($user_id);
 
@@ -40,6 +43,9 @@ function basicStats() {
 
     ?>
     <div class="basic-stats">
+		<?php if ($admin){ ?>
+			<h5>Nombres de vues du profil « test » :</h5>
+		<?php } ?>
         <p>
             Vos cartes et menus ont été vues 
             <strong><?= ($vue_today == 0)? 0 : $vue_today ?></strong> fois aujourd'hui et 
@@ -560,12 +566,6 @@ function advancedStats() {
 				$(this).closest('form').submit();
 			}
 		});
-		
-		// GO TO SPECIFIC DATE
-		// $('.xChart').click(function() {
-		// 	var value = this.value;
-		// 	console.log("ça marche: "+value);
-		// })
 
 
 		// SHOW ADVANCED STATS ONLY TO PREMIUM

@@ -42,15 +42,6 @@ function cn_public_page(){ // Fin ligne 1484
 
 	$k = 0;
 	$stat_nbre_vue_table = $wpdb->prefix . 'stat_nbre_vue';
-	
-	 //$username=$_GET['username'];
-	// $nbre_vue=get_nbre_vue_By_Username($username);
-	// //print_r($nbre_vue);
-	// $result_data2=array('nbre_vue' => $nbre_vue[0]['nbre_vue']+1);
-	// $response2=iUpdateArray($users,$result_data2,array('`display_name`'=>$username));	
-	// $response=json_decode($response);
-	
-	//insert_stat_nbre_vue();
 
 
 			/************************************************
@@ -58,15 +49,20 @@ function cn_public_page(){ // Fin ligne 1484
 			************************************************/
 
 	if ($_GET['username']) {
-		$username = $_GET['username'];
-		$user_id = get_userID_By_username($username);
+		$user_login = $_GET['username'];
+		$user_id = get_userID_By_username($user_login);
 		// echo $user_id."<br>";
 
-		// TEST POP-UP
+		// TEST CODE ONLY ON ADMIN PROFILE
 		if ($user_id == 40){
 			// pop_up($user_id);
 			// delete_docs_unused();
 			// delete_docs_users_unused();
+		}
+
+
+		if($user_id != 40){ // Doesn't work for admin profile in case of change of status while testing
+			delete_banner_and_pdf_if_is_lite($user_id);
 		}
 
 
@@ -179,7 +175,7 @@ function cn_public_page(){ // Fin ligne 1484
 
 			$cn_user_documents = get_user_documents_By_Id($user_id);
 			
-			$etablissement_color = get_etablissement_color_By_username($username);
+			$etablissement_color = get_etablissement_color_By_username($user_login);
 			$user_etablissement_color = $etablissement_color[0]['etablissement_color'];
 			
 			// $user_etablissement_name = $all_user_meta['user_registration_nom_etablissement'][0];

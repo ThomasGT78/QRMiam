@@ -13,15 +13,28 @@ function delete_banners_lite(){
     $table_cn_user_doce = $wpdb->prefix . 'cn_user_doce';
     $user_id = get_current_user_id();
 
+    if ($user_id == 40) {
+        $is_admin = true;
+    } else {
+        $is_admin = false;
+    }
+
+
     $membership_product_id = get_user_meta($user_id,'membership_product_id',true);
     if ($membership_product_id == 1105 || $membership_product_id == 236951) {
-        $is_lite = 1;
+        $is_lite = true;
     }
     
-    if($user_id != 40){ // Doesn't work for admin profile in case of change of status while testing
+    if(!$is_admin){ // Doesn't work for admin profile in case of change of status while testing
 
         if ($is_lite){
+            $current_user = wp_get_current_user();
+            $user_login = $current_user->user_login;
+
             $list_user_banners = get_user_banner_By_Id($user_id);
+            $list_user_documents = get_user_documents_By_Id($user_id);
+
+            // DELETE BANNER WHEN BECOME LITE
             if ($list_user_banners){
                 foreach ($list_user_banners as $banner){
                     $banner_id = $banner['id'];
@@ -29,65 +42,124 @@ function delete_banners_lite(){
                     $file_absolute_path = $file_path_raw[0]['file'];
                     $file_relative_path = str_replace("https://qrmiam.fr", ".", $file_absolute_path);
                     
+                    // Delete BANNER from database
                     $delete_sql = "DELETE FROM `".$table_cn_user_doce."` WHERE `id`= $banner_id";
+                    iQuery($delete_sql,$rs);
 
+                    // Delete BANNER file
                     if (file_exists($file_relative_path)) {
                         unlink($file_relative_path);
-                        iQuery($delete_sql,$rs);
                     } 
-                }
-            }
-        } // END if ($is_lite)
+
+                } //  END foreach
+            } // END if($list_user_banners)
+
+            // DELETE PDF WHEN BECOME LITE
+            if ($list_user_documents){
+                foreach ($list_user_documents as $document){
+                    $ext = ".pdf";
+    
+                    $document_id = $document['id'];
+                    $file_path_raw = get_docs_path_By_docs_id($document_id);
+                    $file_absolute_path = $file_path_raw[0]['file'];
+                    $file_relative_path = str_replace("https://qrmiam.fr", ".", $file_absolute_path);
+                    
+                    $extTest = substr($file_relative_path, -4);
+    
+                    if($extTest === $ext){ // if PDF
+                        // Delete PDF from database
+                        $delete_sql = "DELETE FROM `".$table_cn_user_doce."` WHERE `id`= $document_id";
+                        iQuery($delete_sql,$rs);
+    
+                        // Delete PDF file
+                        if (file_exists($file_relative_path)) {
+                            unlink($file_relative_path);
+                        } 
+                    } // END if PDF
+    
+                } // END foreach
+            } // END if($list_user_documents)
+
+        } // END if($is_lite)
     }
 } // END delete_banners_lite()
 
 
+
 /****************************************************************************************************
-*									FUNCTION delete_documents()         						    *
-*   Delete banners unused anymore by Lite or non-actif users if any exists                          *
-*   when there profile are cheked                                                                   *
+*									FUNCTION delete_pdf_if_is_lite()     						    *
+*   Delete banners and PDF unused anymore by Lite or non-actif users if any exists                  *
+*   when there profile are checked                                                                  *
 ****************************************************************************************************/
 
-function delete_banners_if_not_premium(){
+function delete_banner_and_pdf_if_is_lite($user_id){
 
     global $wpdb;
     $table_cn_user_doce = $wpdb->prefix . 'cn_user_doce';
-    $user_id = get_current_user_id();
 
     $membership_product_id = get_user_meta($user_id,'membership_product_id',true);
     if ($membership_product_id == 1105 || $membership_product_id == 236951) {
         $is_lite = 1;
     }
-    if ($membership_product_id == 1000 || $membership_product_id == 2000) {
-        $is_non_actif = 1;
-    }
 
-    if($user_id != 40){ // Doesn't work for admin profile in case of change of status while testing
+    if ($is_lite){
 
-        if ($is_lite || $is_non_actif){
-            $list_user_banners = get_user_banner_By_Id($user_id);
-            if ($list_user_banners){
-                foreach ($list_user_banners as $banner){
-                    $banner_id = $banner['id'];
-                    $file_path_raw = get_docs_path_By_docs_id($banner_id);
-                    $file_absolute_path = $file_path_raw[0]['file'];
-                    $file_relative_path = str_replace("https://qrmiam.fr", ".", $file_absolute_path);
-                    
-                    $delete_sql = "DELETE FROM `".$table_cn_user_doce."` WHERE `id`= $banner_id";
+        // DELETE BANNER
+        $list_user_banners = get_user_banner_By_Id($user_id);
 
+        if ($list_user_banners){
+            foreach ($list_user_banners as $banner){
+                $banner_id = $banner['id'];
+                $file_path_raw = get_docs_path_By_docs_id($banner_id);
+                $file_absolute_path = $file_path_raw[0]['file'];
+                $file_relative_path = str_replace("https://qrmiam.fr", ".", $file_absolute_path);
+                
+                // Delete BANNER from database
+                $delete_sql = "DELETE FROM `".$table_cn_user_doce."` WHERE `id`= $banner_id";
+                iQuery($delete_sql,$rs);
+
+                // Delete BANNER file
+                if (file_exists($file_relative_path)) {
+                    unlink($file_relative_path);
+                } 
+            }
+        } // END if($list_user_banners)
+
+        // DELETE PDF 
+        $list_user_documents = get_user_documents_By_Id($user_id);
+
+        if ($list_user_documents){
+            foreach ($list_user_documents as $document){
+                $ext = ".pdf";
+
+                $document_id = $document['id'];
+                $file_path_raw = get_docs_path_By_docs_id($document_id);
+                $file_absolute_path = $file_path_raw[0]['file'];
+                $file_relative_path = str_replace("https://qrmiam.fr", ".", $file_absolute_path);
+                
+                $extTest = substr($file_relative_path, -4);
+
+                if($extTest === $ext){ // if PDF
+
+                    // Delete PDF from database
+                    $delete_sql = "DELETE FROM `".$table_cn_user_doce."` WHERE `id`= $document_id";
+                    iQuery($delete_sql,$rs);
+
+                    // Delete PDF file
                     if (file_exists($file_relative_path)) {
                         unlink($file_relative_path);
-                        iQuery($delete_sql,$rs);
                     } 
-                }
-            }
-        } // END if($is_lite || $is_non_actif)
-    }
-} // END delete_banners_if_not_premium()
+                } // END if PDF
+
+            } // END foreach
+        } // END if($list_user_documents)
+
+    } // END if($is_lite)
+} // END delete_pdf_if_is_lite()
 
 
 /****************************************************************************************************
-*									FUNCTION delete_documents()         						    *
+*								FUNCTION delete_all_docs_if_not_actif() 						    *
 *   Delete all docs from non-active users if any exists                                             *
 *   when there profile are cheked                                                                   *
 ****************************************************************************************************/
@@ -250,7 +322,6 @@ function delete_docs_users_unused(){
                 $file_relative_path = $base_directory."/".$sub_list_file;
 
                 $get_doc_SQL = "SELECT * FROM `3VQ4Io6_cn_user_doce` WHERE `file`='$path';";
-                // $get_doc_SQL = "SELECT * FROM `3VQ4Io6_cn_user_doce` WHERE `file` LIKE '$path%';";
                 $response = iWhileFetch($get_doc_SQL);
                 // print_r($response);
                 if($response){

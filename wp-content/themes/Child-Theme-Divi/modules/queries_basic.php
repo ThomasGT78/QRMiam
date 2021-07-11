@@ -48,6 +48,30 @@ function iMainQuery($SQL, &$rs) {
 
 
 /**************************************************************************************************
+ *										FUNCTION generalQuery()									  *
+ **************************************************************************************************/
+
+function generalQuery($SQL) {
+	global $wpdb;
+	// requête sur la base de données
+	$result = $wpdb->query($SQL);
+	if($wpdb->last_error) { // s'il y a eu une erreur
+		$error = $wpdb->last_error;
+		$last_query = $wpdb->last_query;
+		$success = 'warning';
+	}
+	else{
+		$success = 'success';
+	}
+
+	$response = array('success' => $success, 'error' => $error, 'last_query' => $last_query);
+	
+	return $response;
+
+} // generalQuery()
+
+
+/**************************************************************************************************
  *									FUNCTION iWhileFetch()										  *
  **************************************************************************************************/
 

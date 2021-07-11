@@ -219,33 +219,66 @@ function upload_document() {	// end at line 1160
 			-	 DELETE SUBMITED	--
 			------------------------*/
 			if (isset($_POST['btn_delete_document']) || isset($_POST['btn_delete_banner'])) {
-				if (isset($_POST['btn_delete_document'])) {
-					$img_id = $_POST['document_id'];
-				} elseif (isset($_POST['btn_delete_banner'])) {
-					$img_id = $_POST['banner_id'];
-				}
-
+				
 				global $wpdb;
 				$table_user_doce = $wpdb->prefix . 'cn_user_doce';
 
-				$user_id = get_current_user_id();
-				$file_path_raw = get_docs_path_By_docs_id($img_id);
-				$file_absolute_path = $file_path_raw[0]['file'];
-				$file_relative_path = str_replace("https://qrmiam.fr", ".", $file_absolute_path);
-				
-				
-				$SQL = "DELETE FROM `".$table_user_doce."` WHERE `id`= $img_id";
-				
-				if (file_exists($file_relative_path)) {
-					unlink($file_relative_path);
-					if ($ss = iQuery($SQL,$rs)) { // return boolean
-						?> <div class="umsg"><h2>Document effacé avec succès</h2></div> <?php	
+				// FONCTION POUR SUPPRIMER UN DOCUMENT
+				function delete_doc($img_id, $table_user_doce){
+					$file_path_raw = get_docs_path_By_docs_id($img_id);
+					$file_absolute_path = $file_path_raw[0]['file'];
+					$file_relative_path = str_replace("https://qrmiam.fr", ".", $file_absolute_path);
+					
+					$SQL = "DELETE FROM `".$table_user_doce."` WHERE `id`= $img_id";
+					
+					if (file_exists($file_relative_path)) {
+						unlink($file_relative_path);
+						if ($ss = iQuery($SQL,$rs)) { // return boolean
+							return $query_success = true;	
+						} else {
+							return $query_success = false;	
+						}
 					} else {
-						?> <div class="umsg"><h2>Il y a eu un problème</h2></div> <?php	
+						?> <div class="umsg"><h2>Le fichier n'existe pas!</h2></div> <?php
 					}
-				} else {
-					?> <div class="umsg"><h2>Le fichier n'existe pas!</h2></div> <?php
+				} // END function delete_doc($img_id)
+
+
+				// DOCUMENT DELETE
+				if (isset($_POST['btn_delete_document'])) {
+					
+					$docs_to_delete = json_decode(stripslashes($_POST['document_id_list']));
+
+					// MULTIPLE DELETE
+					if($docs_to_delete){
+						$query_success_tab =[];
+						foreach($docs_to_delete as $img_id){
+							array_push($query_success_tab, delete_doc($img_id, $table_user_doce));
+						}
+						if(in_array($error = false, $query_success_tab)){
+							?> <div class="umsg"><h2>Il y a eu un problème</h2></div> <?php
+						} else {
+							?> <div class="umsg"><h2>Documents effacés avec succès</h2></div> <?php
+						}
+					} 
+					// SINGLE DELETE
+					else { 
+						$img_id = $_POST['document_id'];
+						if(delete_doc($img_id, $table_user_doce)){
+							?> <div class="umsg"><h2>Document effacé avec succès</h2></div> <?php
+						} else {
+							?> <div class="umsg"><h2>Il y a eu un problème</h2></div> <?php
+						}
+					}
+				} // END Document Delete
+
+
+				// BANNER DELETE
+				elseif (isset($_POST['btn_delete_banner'])) {
+					$img_id = $_POST['banner_id'];
+					delete_doc($img_id, $table_user_doce);
 				}
+
 
 				// Get the new values updated
 				if (isset($_POST['btn_delete_document'])) {
@@ -268,6 +301,7 @@ function upload_document() {	// end at line 1160
 						$response_ordering = json_decode($response_ordering);
 					}
 				} 
+
 				if (isset($_POST['btn_delete_banner'])) {
 					$list_user_banners = get_user_banner_By_Id(get_current_user_id());
 					$list_user_banners_count = count($list_user_banners);
@@ -289,9 +323,9 @@ function upload_document() {	// end at line 1160
 						$response_ordering = json_decode($response_ordering);
 					}
 				}
-			}
+			} // END if (isset($_POST['btn_delete_document']) || isset($_POST['btn_delete_banner']))
 
-			
+
 			/*------------------------------------
 			-	 UPDATE ETABLISHMENT SUBMITED	--
 			------------------------------------*/
@@ -711,7 +745,7 @@ function upload_document() {	// end at line 1160
 					?>
 
 						<div>
-							<label><span>Ajouter une image&nbsp;</span><span>(jpg, png, PDF)</span></label>
+							<label><span>Ajouter un document</span>&nbsp;<span>(jpg, png, PDF)</span></label>
 							<input type="file" name="add_document[]" class="add_document input-file" placeholder="Image"  accept="application/pdf,image/*" required="required" multiple>
 						</div>
 					<?php
@@ -854,6 +888,12 @@ function upload_document() {	// end at line 1160
 			<div class="uploaded-doc">
 				<h2>Documents en ligne</h2>
 				
+				<!-- <form class="form-delete-multiple">
+					<div class="div-btn-delete-multiple">
+						<input type="hidden" name="document_id_list" value=[]>
+						<button type="submit" class="cn_btn gif_load_onClick et_pb_button" name="btn_delete_multiple_docs">Effacer les documents sélectionné</button>
+					</div>
+				</form> -->
 				<?php
 				// If there are any documents uploaded
 				if ($list_user_documents) {
@@ -953,12 +993,19 @@ function upload_document() {	// end at line 1160
 											<button type="submit" class="cn_btn gif_load_onClick et_pb_button " name="btn_update_document">Mise à jour</button>	
 										</div>
 										<!-- BUTTON DELETE -->
-										<div class="div-btn-item-delete">
-											<input type="hidden" name="document_id" value="<?php echo $document['id']; ?>">
-											<button type="submit" class="cn_btn gif_load_onClick et_pb_button" name="btn_delete_document">Effacer</button>
+										<div class="delete-test">
+											<div class="div-btn-item-delete">
+												<input type="hidden" name="document_id" value="<?php echo $document['id']; ?>">
+												<input type="hidden" name="document_id_list" class="document_id_list" value=[]>
+												<button type="submit" class="cn_btn gif_load_onClick et_pb_button" name="btn_delete_document">Effacer</button>
+											</div>
+											<div class="delete-multiple">
+												<input type="checkbox" name="delete_<?= $document['id']; ?>" id="delete_<?= $document['id']; ?>" class="check-delete-multiple" value="<?= $document['id']; ?>" />
+											</div>
 										</div>
 									</div>
 								</form>
+								
 							</div> <!-- END Upload Document -->
 
 						</div>
@@ -1305,7 +1352,29 @@ function upload_document() {	// end at line 1160
 			.div-item-img-doc a {
 				text-decoration: none;
 			}
-
+			.check-delete-multiple { 
+				transform : scale(1.5); 
+			}
+			.form-delete-multiple {
+				display: flex;
+				justify-content: flex-end;
+			}
+			.delete-test {
+				display: flex;
+				align-content: center;
+				flex-wrap: wrap;
+			}
+			.delete-multiple {
+				display: flex;
+				flex-direction: column;
+				justify-content: center;
+			}
+			.check-delete-multiple {
+				display: block;
+			}
+			.div-btn-item-delete{
+				margin-right: 4px;
+			}
 
 						/****************
 						*   TABLETTE    *
@@ -1410,6 +1479,14 @@ function upload_document() {	// end at line 1160
 					text-align-last: center;
 					font-weight: 600;
 				}
+				.delete-test {
+					justify-content: center;
+					width: 133.825px;
+				}
+				
+				.div-btn-item-delete{
+					margin-right: 7.2px;
+				}
 			}
 		</style>
 
@@ -1460,6 +1537,32 @@ function upload_document() {	// end at line 1160
 							closestForm.find('button[name=btn_update_document]').click();
 						}
 					})
+
+					// MANAGE MULTIPLE DELETE OF DOCUMENTS
+						var deleteTab = [];
+					$('.check-delete-multiple').click(function() {
+						var checkboxValue = $(this).val();
+						if ($(this).is(':checked')){
+							deleteTab.push(checkboxValue);
+							$(".document_id_list").val(JSON.stringify(deleteTab));
+						} else {
+							var valueIndex = deleteTab.indexOf(checkboxValue);
+							deleteTab.splice(valueIndex, 1);
+							$(".document_id_list").val(JSON.stringify(deleteTab));
+						}
+						console.log(deleteTab.length);
+						if(deleteTab.length > 0){
+							$("button[name='btn_delete_document']").text("Effacer la sélection");
+							$("button[name='btn_delete_document']").css({
+								'font-size': "12px",
+								'width': 'max-content'
+							});
+						} else {
+							$("button[name='btn_delete_document']").text("Effacer");
+							$("button[name='btn_delete_document']").removeAttr('style');
+						}
+					})
+
 				})  // $(document).ready
 
 			})( jQuery ); // function( $ )

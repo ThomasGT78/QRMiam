@@ -10,6 +10,16 @@ function theme_enqueue_styles() {
 
 }
 
+// UPDATE PHONE NUMBER FROM CUSTOM FIELD
+add_action( 'woocommerce_save_account_details', 'save_phone_number', 12, 1 );
+function save_phone_number($user_id) {
+    // For Favorite color
+    if(isset($_POST['account_tel'])) {
+        update_user_meta($user_id, 'user_registration_tel', sanitize_text_field($_POST['account_tel']));
+	}
+}
+
+
 // get_template_part( 'shivam-functions' );
 // get_template_part( 'shivam-functions-tom' );
 get_template_part( 'qrmiam-functions' );

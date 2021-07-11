@@ -117,7 +117,8 @@ get_template_part( 'modules/user_profile_fields' );
 // wk_save_custom_user_profile_fields()
 
 
-get_template_part( 'modules/pop_up' );
+get_template_part( 'modules/pop_up_advertizement' );
+get_template_part( 'modules/pop_up_cahier' );
 
 
 get_template_part( 'modules/delete_documents' );
